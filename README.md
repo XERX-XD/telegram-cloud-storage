@@ -83,7 +83,7 @@ The frontend structure is still being developed.
 ## 1. Clone the repository
 
 ```bash
-git [clone YOUR_REPOSITORY_URL](https://github.com/XERX-XD/telegram-cloud-storage.git)
+git clone https://github.com/XERX-XD/telegram-cloud-storage.git
 cd telegram-cloud-storage
 ```
 
