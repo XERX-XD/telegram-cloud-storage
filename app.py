@@ -89,7 +89,7 @@ def get_files():
     return jsonify({"status":"not found any thing in database"})
 
 @app.route("/files/<int:id>/download")
-#@jwt_required()
+@jwt_required()
 def download(id):
     file_record = db.session.get(File, id)
     if not file_record:
@@ -104,7 +104,33 @@ def download(id):
     download_url = f"https://api.telegram.org/file/bot{BOT_TOKEN}/{file_path}"
     
     return redirect(download_url)
-                            
+
+@app.route("/files/search",methods=["GET"])
+@jwt_required()
+def search():
+    result=[]
+    query = request.args.get("q", "").strip()
+    #print(query)
+    if not query:
+        return jsonify({
+            "status": "error",
+            "message": "Search query is required"
+        }), 400
+    files = File.query.filter(File.filename.ilike(f"%{query}%"))
+    #print(files)
+    for file in files:
+        print(file.filename)
+        result.append({
+            "id": file.id,
+            "filename": file.filename,
+            "file_id": file.file_id,
+            "uploaded_at": file.uploaded_at
+        })
+    return jsonify({
+        "status": "success",
+        "count": len(result),
+        "files": result
+    })
 with app.app_context():
     db.create_all()
 
