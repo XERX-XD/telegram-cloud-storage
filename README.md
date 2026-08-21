@@ -83,13 +83,10 @@ The frontend structure is still being developed.
 ## 1. Clone the repository
 
 ```bash
-git clone YOUR_REPOSITORY_URL
+git [clone YOUR_REPOSITORY_URL](https://github.com/XERX-XD/telegram-cloud-storage.git)
 cd telegram-cloud-storage
 ```
 
-Replace `YOUR_REPOSITORY_URL` with your GitHub repository URL.
-
----
 
 ## 2. Create a virtual environment
 
