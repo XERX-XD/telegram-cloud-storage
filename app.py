@@ -76,7 +76,35 @@ def upload():
         total.append({"filename": upload_file.filename, "file_id": file_id})
 
     return jsonify({"status": "uploaded", "files": total})
+@app.route("/files",methods=["GET"])
+@jwt_required()
+def get_files():
+    files = File.query.all()
+    print(files)
+    result=[]
+    if files:
+        for file in files:
+            result.append({"id":file.id,"filename":file.filename,"uploaded_at":file.uploaded_at,"file_id":file.file_id})
+        return jsonify({"status":"found","files":result})
+    return jsonify({"status":"not found any thing in database"})
 
+@app.route("/files/<int:id>/download")
+#@jwt_required()
+def download(id):
+    file_record = db.session.get(File, id)
+    if not file_record:
+        return jsonify({"status":"file not found to that id"})
+        
+    file_response = requests.get(f"https://api.telegram.org/bot{BOT_TOKEN}/getFile",params={"file_id": file_record.file_id})
+    print(file_response.json())
+    file_info= file_response.json()
+    if not file_info.get("ok"):
+        return jsonify({"error": "could not retrieve file from Telegram"}), 502
+    file_path = file_info["result"]["file_path"]
+    download_url = f"https://api.telegram.org/file/bot{BOT_TOKEN}/{file_path}"
+    
+    return redirect(download_url)
+                            
 with app.app_context():
     db.create_all()
 
