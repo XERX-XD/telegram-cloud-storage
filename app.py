@@ -6,10 +6,14 @@ import datetime
 from dotenv import load_dotenv
 import os
 import requests
+from datetime import timedelta
+
+
 load_dotenv()
 app = Flask(__name__)
 app.config["JWT_SECRET_KEY"] = os.getenv("SECRET_KEY")
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///storage.db"
+app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(days=1)
 db = SQLAlchemy(app)
 jwt = JWTManager(app)
 
@@ -39,9 +43,18 @@ def upload():
     print(x)
     total=[]
     for upload_file in x:
+        try:
 
-        response = requests.post(f"https://api.telegram.org/bot{BOT_TOKEN}/sendDocument",data={"chat_id":CHAT_ID},files={"document":(upload_file.filename,upload_file.stream)})
-        result = response.json()
+            response = requests.post(f"https://api.telegram.org/bot{BOT_TOKEN}/sendDocument",data={"chat_id":CHAT_ID},files={"document":(upload_file.filename,upload_file.stream)})
+            result = response.json()
+        except requests.exceptions.RequestException as e:
+
+            total.append({"filename": upload_file.filename, "status": "failed", "error": f"network error: {str(e)}"})
+            continue
+        if not result.get("ok"):
+            total.append({"filename": upload_file.filename, "status": "failed", "error": result.get("description", "unknown error")})
+            continue
+        
         print(result)
         file_data=result["result"]
         if "document" in file_data:
@@ -54,7 +67,9 @@ def upload():
             file_id = file_data["audio"]["file_id"]
         else:
             file_id = None  
-        
+        if file_id is None:
+            total.append({"filename": upload_file.filename, "status": "failed", "error": "unrecognized file type in response"})
+            continue
         new_file = File(filename=upload_file.filename,file_id=file_id)
         db.session.add(new_file)
         db.session.commit()
