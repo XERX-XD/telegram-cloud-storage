@@ -8,9 +8,12 @@ import os
 import requests
 from datetime import timedelta
 
+from flask_cors import CORS
 
 load_dotenv()
 app = Flask(__name__)
+
+CORS(app)
 app.config["JWT_SECRET_KEY"] = os.getenv("SECRET_KEY")
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///storage.db"
 app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(days=1)
